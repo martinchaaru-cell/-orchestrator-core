@@ -1,0 +1,24 @@
+name: Build & Push Docker
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Build orchestrator
+      uses: docker/build-push-action@v4
+      with:
+        context: ./orchestrator
+        file: ./orchestrator/Dockerfile
+        push: false
+        tags: orchestrator:latest
