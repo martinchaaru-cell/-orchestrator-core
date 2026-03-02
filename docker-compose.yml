@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: orchestrator-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  orchestrator:
+    build:
+      context: ./orchestrator
+      dockerfile: Dockerfile
+    container_name: orchestrator-core
+    ports:
+      - "8080:8080"
+    environment:
+      REDIS_URL: redis://redis:6379
+      PORT: 8080
+      LOG_LEVEL: info
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./tasks:/app/tasks:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  agent-1:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    container_name: orchestrator-agent-1
+    environment:
+      ORCHESTRATOR_URL: http://orchestrator:8080
+      AGENT_NAME: agent-1
+      LOG_LEVEL: info
+    depends_on:
+      orchestrator:
+        condition: service_healthy
+    volumes:
+      - ./tasks:/app/tasks:ro
+
+  agent-2:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    container_name: orchestrator-agent-2
+    environment:
+      ORCHESTRATOR_URL: http://orchestrator:8080
+      AGENT_NAME: agent-2
+      LOG_LEVEL: info
+    depends_on:
+      orchestrator:
+        condition: service_healthy
+    volumes:
+      - ./tasks:/app/tasks:ro
+
+volumes:
+  redis_data:
