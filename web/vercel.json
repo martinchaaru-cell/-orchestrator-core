@@ -1,0 +1,11 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "env": {
+    "NEXT_PUBLIC_API_URL": {
+      "description": "Orchestrator API URL",
+      "required": false,
+      "default": "http://localhost:8080"
+    }
+  }
+}
